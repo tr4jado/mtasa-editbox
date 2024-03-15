@@ -143,6 +143,21 @@ function Editbox:setProperties(propertie, value)
     self.properties[propertie] = value
 end
 
+function Editbox:destroy()
+    for i, v in ipairs(Editbox.instances) do
+        if v == self then
+            table.remove(Editbox.instances, i)
+            self = nil
+
+            collectgarbage()
+
+            return true
+        end
+    end
+
+    return false
+end
+
 -- Events
 
 addEventHandler('onClientCharacter', root, function(char)
