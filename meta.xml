@@ -1,0 +1,7 @@
+<meta>
+    <info author='tr4jado' />
+    <oop>true</oop>
+
+    <script src='editbox.lua' type='client' cache='false' />
+    <script src='example.lua' type='client' cache='false' />
+</meta>
