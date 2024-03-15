@@ -141,6 +141,7 @@ function Editbox:setProperties(propertie, value)
     assert(type(value) == list_properties[propertie], 'bad argument #2 to \'setProperties\' (' .. list_properties[propertie] .. ' expected, got \'' .. type(value) .. '\')')
 
     self.properties[propertie] = value
+    return true
 end
 
 function Editbox:destroy()
@@ -150,7 +151,6 @@ function Editbox:destroy()
             self = nil
 
             collectgarbage()
-
             return true
         end
     end
