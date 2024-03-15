@@ -138,7 +138,7 @@ function Editbox:setProperties(propertie, value)
     end
 
     assert(list_properties[propertie], 'bad argument #1 to \'setProperties\' (invalid propertie \'' .. propertie .. '\')')
-    assert(type(value) == list_properties[propertie], 'bad argument #2 to \'setProperties\' (invalid value type \'' .. type(value) .. '\')')
+    assert(type(value) == list_properties[propertie], 'bad argument #2 to \'setProperties\' (' .. list_properties[propertie] .. ' expected, got \'' .. type(value) .. '\')')
 
     self.properties[propertie] = value
 end
