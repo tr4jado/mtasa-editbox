@@ -76,7 +76,7 @@ function Editbox:draw(display, x, y, width, height, color)
     local tick = getTickCount()
 
     if self.backspace.press then
-        if tick - self.backspace.press >= 500 and tick - self.backspace.last > 50 then
+        if tick - self.backspace.press >= 500 and tick - self.backspace.last >= 50 then
             self.text = self.text:sub(1, #self.text - 1)
             self.backspace.last = tick
         end
