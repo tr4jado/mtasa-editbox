@@ -54,7 +54,7 @@ end
 editbox:setProperties(propriedade, valor)
 ```
 
-### Destruir Editbox
+### Destruindo o ColorPicker
 
 ```lua
 editbox:destroy()
