@@ -87,7 +87,7 @@ function Editbox:draw(display, x, y, width, height, color)
 
     dxDrawText(
         (self.text:len() > 0 or Editbox.focus == self) and
-        text .. (wordbreak and '|' or '') or display,
+        text .. ((wordbreak and self.properties.cursor) and '|' or '') or display,
         x, y, x + width, y + height,
         color, 1, font,
         wordbreak and align or (textW > width and 'right' or align),
