@@ -54,6 +54,12 @@ end
 editbox:setProperties(propriedade, valor)
 ```
 
+### Destruir Editbox
+
+```lua
+editbox:destroy()
+```
+
 ### Eventos
 
 O Editbox captura diversos eventos relacionados à entrada de texto, tais como `onClientCharacter`, `onClientKey`, `onClientPaste`, e `onClientClick`, para oferecer uma experiência de entrada de texto completa e interativa.
