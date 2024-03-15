@@ -56,6 +56,7 @@ function Editbox.new(properties)
     table.insert(Editbox.instances, self)
 
     if properties then
+        assert(type(properties) == 'table', 'bad argument #1 to \'new\' (table expected, got ' .. type(properties) .. ')')
         self:setProperties(properties)
     end
 
