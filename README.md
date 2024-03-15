@@ -65,7 +65,7 @@ local editbox = Editbox.new({
     font = 'arial',
     align = 'center',
     max = 20,
-    cursor = true
+    cursor = false
 })
 
 addEventHandler('onClientRender', root, function()
