@@ -25,7 +25,7 @@ Editbox.instances = {}
 Editbox.focus = false
 
 local list_properties = {
-    ['font'] = 'string',
+    ['font'] = 'userdata',
     ['align'] = 'string',
     ['wordbreak'] = 'boolean',
     ['mask'] = 'boolean',
