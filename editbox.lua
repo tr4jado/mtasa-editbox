@@ -1,24 +1,3 @@
-local screen = Vector2(guiGetScreenSize())
-
-local cursor = {}
-
-cursor.update = function()
-    cursor.state = isCursorShowing()
-
-    if cursor.state then
-        local x, y = getCursorPosition()
-        cursor.x, cursor.y = x * screen.x, y * screen.y
-    else
-        cursor.x, cursor.y = -1, -1
-    end
-end
-
-cursor.onBox = function(x, y, w, h)
-    return cursor.x >= x and cursor.x <= x + w and cursor.y >= y and cursor.y <= y + h
-end
-
--- Editbox class
-
 Editbox = {}
 Editbox.__index = Editbox
 Editbox.instances = {}
@@ -32,11 +11,17 @@ local list_properties = {
     ['maskchar'] = 'string',
     ['isnumber'] = 'boolean',
     ['max'] = 'number',
-    ['cursor'] = 'boolean'
+    ['cursor'] = 'boolean',
+    ['parent'] = 'table'
 }
 
 function Editbox.new(properties)
     local self = setmetatable({}, Editbox)
+
+    self.x = 0
+    self.y = 0
+    self.width = 0
+    self.height = 0
 
     self.text = ''
     self.selected = false
@@ -50,7 +35,8 @@ function Editbox.new(properties)
         font = 'default-bold',
         align = 'left',
         max = 9999,
-        cursor = true
+        cursor = true,
+        parent = {0, 0, 0, 0}
     }
 
     table.insert(Editbox.instances, self)
@@ -64,8 +50,6 @@ function Editbox.new(properties)
 end
 
 function Editbox:draw(display, x, y, width, height, color)
-    cursor.update()
-
     self.x, self.y, self.width, self.height = x, y, width, height
 
     local font = self.properties.font
@@ -88,7 +72,7 @@ function Editbox:draw(display, x, y, width, height, color)
     dxDrawText(
         (self.text:len() > 0 or Editbox.focus == self) and
         text .. ((wordbreak and self.properties.cursor) and '|' or '') or display,
-        x, y, x + width, y + height,
+        x, y, width + x, height + y,
         color, 1, font,
         wordbreak and align or (textW > width and 'right' or align),
         wordbreak and (textH > height and 'bottom' or 'top') or 'top',
@@ -138,7 +122,7 @@ function Editbox:setProperties(propertie, value)
     end
 
     assert(list_properties[propertie], 'bad argument #1 to \'setProperties\' (invalid propertie \'' .. propertie .. '\')')
-    assert(type(value) == list_properties[propertie], 'bad argument #2 to \'setProperties\' (' .. list_properties[propertie] .. ' expected, got \'' .. type(value) .. '\')')
+    assert(type(value) == list_properties[propertie], 'bad argument #2 to \'setProperties\': ' .. propertie .. ' (' .. list_properties[propertie] .. ' expected, got \'' .. type(value) .. '\')')
 
     self.properties[propertie] = value
     return true
@@ -256,7 +240,7 @@ addEventHandler('onClientClick', root, function(button, state)
     for _, self in ipairs(Editbox.instances) do
         self.selected = false
 
-        if cursor.onBox(self.x, self.y, self.width, self.height) then
+        if cursor.box(unpack(self.properties.parent)) then
             focus = self
         end
     end
