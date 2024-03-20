@@ -35,7 +35,8 @@ local properties = {
     mask = false, -- Mascaramento de texto (true/false)
     maskchar = '*', -- Caractere de máscara (apenas se 'mask' for true)
     isnumber = false, -- Aceitar apenas números (true/false)
-    cursor = true -- Exibir cursor (true/false) 
+    cursor = true -- Exibir cursor (true/false)
+    parent = {0, 0, 0, 0} -- Posição do fundo do editbox
 }
 local editbox = Editbox.new(properties)
 ```
@@ -48,11 +49,11 @@ function onRender()
 end
 ```
 
-### Definindo Propriedades
-
 ```lua
 editbox:setProperties(propriedade, valor)
 ```
+
+#### Propriedades:
 
 ### Destruindo o ColorPicker
 
