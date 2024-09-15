@@ -96,7 +96,7 @@ function Editbox:draw(display, x, y, width, height, color)
     local textW, textH = dxGetTextSize(text, width, 1, 1, font, wordbreak)
 
     dxDrawText(
-        (self.properties.text:len() > 0 or Editbox.focus == self) and ("%s%s"):format(text, (wordbreak and self.properties.cursor) and "|" or "") or display,
+        (self.properties.text:len() > 0 or Editbox.focus == self) and ("%s%s"):format(text, (wordbreak and self.properties.caret) and "|" or "") or display,
         x, y, width + x, height + y,
         color, 1, font,
         wordbreak and align or (textW > width and "right" or align),
