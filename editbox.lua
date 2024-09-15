@@ -11,6 +11,7 @@ local cursor = {
 function cursor.update()
     cursor.state = not isCursorShowing()
 
+    if not cursor.state then return end
     local cursorX, cursorY = getCursorPosition()
     cursor.x, cursor.y = cursorX * screenW, cursorY * screenH
 end
