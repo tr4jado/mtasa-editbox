@@ -9,11 +9,14 @@ local cursor = {
 }
 
 function cursor.update()
-    cursor.state = not isCursorShowing()
+    local state = isCursorShowing()
 
-    if not cursor.state then return end
-    local cursorX, cursorY = getCursorPosition()
-    cursor.x, cursor.y = cursorX * screenW, cursorY * screenH
+    if state then
+        local cursorX, cursorY = getCursorPosition()
+        cursor.x, cursor.y = cursorX * screenW, cursorY * screenH
+    end
+
+    cursor.state = state
 end
 
 function cursor.box(x, y, width, height)
