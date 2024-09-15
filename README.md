@@ -74,6 +74,50 @@ Obtém o valor de uma propriedade da caixa de texto.
 
 Destrói a instância da caixa de texto e a remove da lista de instâncias.
 
+## Propriedades Disponíveis
+
+- **`font`**: Define a fonte usada para o texto da caixa de texto.
+  - **Tipo**: `userdata`
+  - **Exemplo**: `dxCreateFont("font.ttf", 10)`
+
+- **`align`**: Define o alinhamento do texto dentro da caixa.
+  - **Tipo**: `string`
+  - **Valores Possíveis**: `"left"`, `"center"`, `"right"`
+  - **Exemplo**: `"center"`
+
+- **`wordbreak`**: Ativa ou desativa a quebra de palavras dentro da caixa.
+  - **Tipo**: `boolean`
+  - **Exemplo**: `true`
+
+- **`mask`**: Define se o texto deve ser mascarado (ex.: para senhas).
+  - **Tipo**: `boolean`
+  - **Exemplo**: `false`
+
+- **`maskchar`**: Define o caractere que será usado para a máscara do texto.
+  - **Tipo**: `string`
+  - **Exemplo**: `"*"`
+
+- **`isnumber`**: Define se a caixa deve aceitar apenas números.
+  - **Tipo**: `boolean`
+  - **Exemplo**: `false`
+
+- **`max`**: Define o número máximo de caracteres permitidos na caixa de texto.
+  - **Tipo**: `number`
+  - **Exemplo**: `100`
+
+- **`caret`**: Define se o cursor (caret) deve ser exibido.
+  - **Tipo**: `boolean`
+  - **Exemplo**: `true`
+
+- **`parent`**: Define a área da tela onde a caixa de texto deve estar posicionada. Utilizado para verificar se o cursor está dentro da área da caixa.
+  - **Tipo**: `table`
+  - **Exemplo**: `{0, 0, 800, 600}`
+
+- **`text`**: Define o texto inicial da caixa.
+  - **Tipo**: `string`
+  - **Exemplo**: `"Texto inicial"`
+
+
 ## Contribuições
 
 Sinta-se à vontade para fazer melhorias ou enviar pull requests. 
