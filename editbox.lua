@@ -120,6 +120,7 @@ function Editbox:draw(placeholder, x, y, width, height, color)
     end
 
     local now = getTickCount()
+    local text = self.masked and self.masked:rep(#self.text) or self.text
 
     for i, v in pairs(self.keys) do
         if v.state and now - v.state >= 500 and now - v.last >= 30 then
@@ -140,28 +141,27 @@ function Editbox:draw(placeholder, x, y, width, height, color)
     end
 
     if self.focus and getTickCount() % 1000 < 500 then
-        local caretX = clamp(self.width - 1, 0, dxGetTextWidth(self.text:sub(1, self.caret_position), 1, self.font) + self.offset_temp)
+        local caretX = clamp(self.width - 1, 0, dxGetTextWidth(text:sub(1, self.caret_position), 1, self.font) + self.offset_temp)
         dxDrawRectangle(x + caretX, y + (height - fontHeight) / 2, 1, fontHeight, color)
     end
 
     if self.all_selected then
-        local rectangleWidth = math.min(self.width, dxGetTextWidth(self.text, 1, self.font) + self.offset_temp)
+        local rectangleWidth = math.min(self.width, dxGetTextWidth(text, 1, self.font) + self.offset_temp)
         dxDrawRectangle(x, y + (height - fontHeight) / 2, rectangleWidth, fontHeight, self.focus and tocolor(0, 170, 255, 100) or tocolor(0, 0, 0, 100))
     end
 end
 
 function Editbox:updateRenderTarget()
     dxSetRenderTarget(self.render_target, true)
-
-    local text = self.masked and self.masked:rep(#self.text) or self.text
-    dxDrawText(text, self.offset_temp, 0, self.width, self.height, tocolor(255, 255, 255), 1, self.font, "left", "center")
-
+        dxDrawText(self.masked and self.masked:rep(#self.text) or self.text, self.offset_temp, 0, self.width, self.height, tocolor(255, 255, 255), 1, self.font, "left", "center")
     dxSetRenderTarget()
 end
 
 function Editbox:updateOffset()
-    local textWidth = dxGetTextWidth(self.text, 1, self.font)
-    local caretX = dxGetTextWidth(self.text:sub(1, self.caret_position), 1, self.font)
+    local text = self.masked and self.masked:rep(#self.text) or self.text
+
+    local textWidth = dxGetTextWidth(text, 1, self.font)
+    local caretX = dxGetTextWidth(text:sub(1, self.caret_position), 1, self.font)
 
     if caretX + self.offset < 0 then
         self.offset = -caretX
@@ -190,11 +190,12 @@ function Editbox:onClick(button, state)
 
     if cursor:box(unpack(self.parent)) then
         if self.focus then
+            local text = self.masked and self.masked:rep(#self.text) or self.text
             local x = cursor.x - self.x - self.offset
             local new
 
             for i = 1, #self.text do
-                local width = dxGetTextWidth(self.text:sub(1, i), 1, self.font)
+                local width = dxGetTextWidth(text:sub(1, i), 1, self.font)
 
                 if width > x then
                     new = i
