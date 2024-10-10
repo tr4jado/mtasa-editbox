@@ -25,6 +25,7 @@ local editbox = Editbox.new({
     masked = false,  -- Defina como uma string para ativar a máscara (ex: "*")
     is_number = true, -- Defina como true para permitir apenas entrada numérica
     max_length = 12,  -- Limite o texto a 12 caracteres
+    parent = {x, y, largura, altura} -- Posição ao clicar, a editbox ficar em foco
 })
 ```
 
