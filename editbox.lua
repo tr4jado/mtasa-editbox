@@ -27,9 +27,13 @@ local function clamp(value, min, max)
     return math.max(min, math.min(value, max))
 end
 
-_dxDrawText = dxDrawText
+local _dxDrawText = dxDrawText
 function dxDrawText(text, x, y, width, height, ...)
     return _dxDrawText(text, x, y, x + width, y + height, ...)
+end
+
+local function lerp(a, b, t)
+    return a + (b - a) * t
 end
 
 -- Class
@@ -80,6 +84,7 @@ function Editbox.new(properties)
 
     self.caret_position = 0
     self.offset = 0
+    self.offset_temp = 0
 
     self.all_selected = false
 
@@ -122,6 +127,12 @@ function Editbox:draw(placeholder, x, y, width, height, color)
         end
     end
 
+    self.offset_temp = lerp(self.offset_temp, self.offset, 0.2)
+
+    if self.offset_temp ~= self.offset then
+        self:updateRenderTarget()
+    end
+
     if self.text:len() == 0 and not self.focus then
         dxDrawText(placeholder, x, y, width, height, color, 1, self.font, "left", "center")
     else
@@ -129,12 +140,12 @@ function Editbox:draw(placeholder, x, y, width, height, color)
     end
 
     if self.focus and getTickCount() % 1000 < 500 then
-        local caretX = math.min(self.width - 1, dxGetTextWidth(self.text:sub(1, self.caret_position), 1, self.font) + self.offset)
+        local caretX = math.min(self.width - 1, dxGetTextWidth(self.text:sub(1, self.caret_position), 1, self.font) + self.offset_temp)
         dxDrawRectangle(x + caretX, y + height / 2 - fontHeight / 2, 1, fontHeight, color)
     end
 
     if self.all_selected then
-        local rectangleWidth = math.min(self.width, dxGetTextWidth(self.text, 1, self.font) + self.offset)
+        local rectangleWidth = math.min(self.width, dxGetTextWidth(self.text, 1, self.font) + self.offset_temp)
         dxDrawRectangle(x, y + height / 2 - fontHeight / 2, rectangleWidth, fontHeight, self.focus and tocolor(0, 170, 255, 100) or tocolor(0, 0, 0, 100))
     end
 end
@@ -143,7 +154,7 @@ function Editbox:updateRenderTarget()
     dxSetRenderTarget(self.render_target, true)
 
     local text = self.masked and self.masked:rep(#self.text) or self.text
-    dxDrawText(text, self.offset, 0, self.width, self.height, tocolor(255, 255, 255), 1, self.font, "left", "center")
+    dxDrawText(text, self.offset_temp, 0, self.width, self.height, tocolor(255, 255, 255), 1, self.font, "left", "center")
 
     dxSetRenderTarget()
 end
