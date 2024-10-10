@@ -140,7 +140,7 @@ function Editbox:draw(placeholder, x, y, width, height, color)
     end
 
     if self.focus and getTickCount() % 1000 < 500 then
-        local caretX = math.min(self.width - 1, dxGetTextWidth(self.text:sub(1, self.caret_position), 1, self.font) + self.offset_temp)
+        local caretX = clamp(self.width - 1, 0, dxGetTextWidth(self.text:sub(1, self.caret_position), 1, self.font) + self.offset_temp)
         dxDrawRectangle(x + caretX, y + height / 2 - fontHeight / 2, 1, fontHeight, color)
     end
 
