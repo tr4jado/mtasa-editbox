@@ -141,7 +141,10 @@ end
 
 function Editbox:updateRenderTarget()
     dxSetRenderTarget(self.render_target, true)
-    dxDrawText(self.text, self.offset, 0, self.width, self.height, tocolor(255, 255, 255), 1, self.font, "left", "center")
+
+    local text = self.masked and self.masked:rep(#self.text) or self.text
+    dxDrawText(text, self.offset, 0, self.width, self.height, tocolor(255, 255, 255), 1, self.font, "left", "center")
+
     dxSetRenderTarget()
 end
 
