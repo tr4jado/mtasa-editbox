@@ -288,7 +288,6 @@ function Editbox:onKey(key, press)
             self.all_selected = true
         end
 
-        -- Atualize o offset após apagar caracteres
         self:updateOffset()
         self:updateRenderTarget()
 
@@ -324,14 +323,3 @@ function Editbox:onPaste(text)
     self:updateOffset()
     self:updateRenderTarget()
 end
-
--- Example
-
-local myedit = Editbox.new({
-    parent = {100, 100, 200, 50},
-})
-
-addEventHandler("onClientRender", root, function()
-    dxDrawRectangle(100, 100, 200, 50, tocolor(255, 255, 255))
-    myedit:draw("Insira sua senha", 100, 100, 200, 50, tocolor(0, 0, 0, 255))
-end)
