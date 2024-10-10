@@ -27,7 +27,7 @@ local function clamp(value, min, max)
     return math.max(min, math.min(value, max))
 end
 
-local _dxDrawText = dxDrawText
+_dxDrawText = dxDrawText
 function dxDrawText(text, x, y, width, height, ...)
     return _dxDrawText(text, x, y, x + width, y + height, ...)
 end
@@ -141,12 +141,12 @@ function Editbox:draw(placeholder, x, y, width, height, color)
 
     if self.focus and getTickCount() % 1000 < 500 then
         local caretX = clamp(self.width - 1, 0, dxGetTextWidth(self.text:sub(1, self.caret_position), 1, self.font) + self.offset_temp)
-        dxDrawRectangle(x + caretX, y + height / 2 - fontHeight / 2, 1, fontHeight, color)
+        dxDrawRectangle(x + caretX, y + (height - fontHeight) / 2, 1, fontHeight, color)
     end
 
     if self.all_selected then
         local rectangleWidth = math.min(self.width, dxGetTextWidth(self.text, 1, self.font) + self.offset_temp)
-        dxDrawRectangle(x, y + height / 2 - fontHeight / 2, rectangleWidth, fontHeight, self.focus and tocolor(0, 170, 255, 100) or tocolor(0, 0, 0, 100))
+        dxDrawRectangle(x, y + (height - fontHeight) / 2, rectangleWidth, fontHeight, self.focus and tocolor(0, 170, 255, 100) or tocolor(0, 0, 0, 100))
     end
 end
 
@@ -167,11 +167,22 @@ function Editbox:updateOffset()
         self.offset = -caretX
     elseif caretX + self.offset > self.width then
         self.offset = self.width - caretX
-    end
-
-    if textWidth <= self.width then
+    elseif textWidth <= self.width then
         self.offset = 0
     end
+end
+
+function Editbox:destroy()
+    if isElement(self.render_target) then
+        destroyElement(self.render_target)
+    end
+
+    removeEventHandler("onClientClick", root, function(...) self:onClick(...) end)
+    removeEventHandler("onClientCharacter", root, function(...) self:onCharacter(...) end)
+    removeEventHandler("onClientKey", root, function(...) self:onKey(...) end)
+    removeEventHandler("onClientPaste", root, function(...) self:onPaste(...) end)
+
+    self = nil
 end
 
 function Editbox:onClick(button, state)
@@ -277,6 +288,10 @@ function Editbox:onKey(key, press)
             self.all_selected = true
         end
 
+        -- Atualize o offset após apagar caracteres
+        self:updateOffset()
+        self:updateRenderTarget()
+
         if self.keys[key] then
             if self.keys[key].state then
                 self.keys[key].last = getTickCount()
@@ -285,9 +300,6 @@ function Editbox:onKey(key, press)
                 self.keys[key].last = getTickCount()
             end
         end
-
-        self:updateOffset()
-        self:updateRenderTarget()
     else
         if self.keys[key] then
             self.keys[key].state = false
@@ -312,3 +324,14 @@ function Editbox:onPaste(text)
     self:updateOffset()
     self:updateRenderTarget()
 end
+
+-- Example
+
+local myedit = Editbox.new({
+    parent = {100, 100, 200, 50},
+})
+
+addEventHandler("onClientRender", root, function()
+    dxDrawRectangle(100, 100, 200, 50, tocolor(255, 255, 255))
+    myedit:draw("Insira sua senha", 100, 100, 200, 50, tocolor(0, 0, 0, 255))
+end)
