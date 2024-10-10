@@ -27,7 +27,7 @@ local function clamp(value, min, max)
     return math.max(min, math.min(value, max))
 end
 
-_dxDrawText = dxDrawText
+local _dxDrawText = dxDrawText
 function dxDrawText(text, x, y, width, height, ...)
     return _dxDrawText(text, x, y, x + width, y + height, ...)
 end
