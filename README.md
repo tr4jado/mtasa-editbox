@@ -53,6 +53,7 @@ local editbox = Editbox.new({
 
 function onRender()
     editbox:draw("Digite aqui...", 100, 100, 300, 40, tocolor(255, 255, 255))
+    editbox.parent = {100, 100, 300, 40}
 end
 addEventHandler("onClientRender", root, onRender)
 ```
