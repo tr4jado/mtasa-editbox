@@ -52,9 +52,9 @@ function Editbox.new(properties)
     self.height = false
 
     self.renderTarget = nil
+    self.text = ""
 
     -- Properties
-    self.text = ""
     self.font = "default"
     self.mask = false
     self.isNumber = false
