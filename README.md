@@ -24,7 +24,7 @@ Editbox.new({
     mask = false,     -- Caractere utilizado para mascarar o texto (útil para senhas).
     isNumber = false, -- Define se a entrada deve aceitar apenas números.
     maxLength = 0,    -- Comprimento máximo do texto (0 = ilimitado).
-    parent = {-1, -1, 0, 0} -- Definição da área dos pais para o componente (x, y, largura, altura).
+    parent = {-1, -1, 0, 0} -- Definição da área para o clique (x, y, largura, altura).
 })
 ```
 
