@@ -51,14 +51,14 @@ function Editbox.new(properties)
     self.width = false
     self.height = false
 
-    self.render_target = nil
+    self.renderTarget = nil
 
     -- Properties
     self.text = ""
     self.font = "default"
-    self.masked = false
-    self.is_number = false
-    self.max_length = 0
+    self.mask = false
+    self.isNumber = false
+    self.maxLength = 0
     self.parent = {-1, -1, 0, 0}
     -- Properties
 
@@ -82,19 +82,24 @@ function Editbox.new(properties)
         }
     end
 
-    self.caret_position = 0
-    self.offset = 0
-    self.offset_temp = 0
+    self.textW = 0
+    self.textH = 0
+    self.caretX = 0
 
-    self.all_selected = false
+    self.caretPosition = 0
+    self.offset = 0
+    self.offsetView = 0
+    self.lastUpdate = getTickCount()
+
+    self.allSelected = false
 
     addEventHandler("onClientClick", root, function(...) self:onClick(...) end)
     addEventHandler("onClientCharacter", root, function(...) self:onCharacter(...) end)
     addEventHandler("onClientKey", root, function(...) self:onKey(...) end)
     addEventHandler("onClientPaste", root, function(...) self:onPaste(...) end)
 
-    if self.masked then
-        assert(type(self.masked) == "string", "Bad argument @ 'Editbox.new' [expected string at argument 1, got " .. type(self.masked) .. "]")
+    if self.mask then
+        assert(type(self.mask) == "string", "Bad argument @ 'Editbox.new' [expected string at argument 1, got " .. type(self.mask) .. "]")
     end
 
     return self
@@ -103,12 +108,12 @@ end
 function Editbox:draw(placeholder, x, y, width, height, color)
     cursor:update()
 
-    local fontHeight = dxGetFontHeight(1, self.font)
+    local now = getTickCount()
 
     self.x = x
     self.y = y
 
-    if not isElement(self.render_target) or (not self.width or self.width ~= width or not self.height or self.height ~= height) then
+    if not isElement(self.renderTarget) or (not self.width or self.width ~= width or not self.height or self.height ~= height) then
         self.width = width
         self.height = height
 
@@ -116,11 +121,8 @@ function Editbox:draw(placeholder, x, y, width, height, color)
             destroyElement(self.rendertarget)
         end
 
-        self.render_target = dxCreateRenderTarget(width, height, true)
+        self.renderTarget = dxCreateRenderTarget(width, height, true)
     end
-
-    local now = getTickCount()
-    local text = self.masked and self.masked:rep(#self.text) or self.text
 
     for i, v in pairs(self.keys) do
         if v.state and now - v.state >= 500 and now - v.last >= 30 then
@@ -128,53 +130,65 @@ function Editbox:draw(placeholder, x, y, width, height, color)
         end
     end
 
-    self.offset_temp = lerp(self.offset_temp, self.offset, 0.2)
+    self.offsetView = lerp(self.offsetView, self.offset, 0.2)
 
-    if self.offset_temp ~= self.offset then
+    if self.offsetView ~= self.offset then
         self:updateRenderTarget()
     end
 
     if self.text:len() == 0 and not self.focus then
         dxDrawText(placeholder, x, y, width, height, color, 1, self.font, "left", "center")
     else
-        dxDrawImage(x, y, width, height, self.render_target, 0, 0, 0, color)
+        dxSetBlendMode("add")
+        dxDrawImage(x, y, width, height, self.renderTarget, 0, 0, 0, color)
+        dxSetBlendMode("blend")
     end
 
-    if self.focus and getTickCount() % 1000 < 500 then
-        local caretX = clamp(self.width - 1, 0, dxGetTextWidth(text:sub(1, self.caret_position), 1, self.font) + self.offset_temp)
-        dxDrawRectangle(x + caretX, y + (height - fontHeight) / 2, 1, fontHeight, color)
+    if self.focus and (now % 1000 < 500 or now - self.lastUpdate < 500) then
+        dxDrawRectangle(x + clamp(self.width - 1, 0, self.caretX + self.offsetView), y + (height - self.textH) / 2, 1, self.textH, color)
     end
 
-    if self.all_selected then
-        local rectangleWidth = math.min(self.width, dxGetTextWidth(text, 1, self.font) + self.offset_temp)
-        dxDrawRectangle(x, y + (height - fontHeight) / 2, rectangleWidth, fontHeight, self.focus and tocolor(0, 170, 255, 100) or tocolor(0, 0, 0, 100))
+    if self.allSelected then
+        local rectangleWidth = math.min(self.width, self.textW + self.offsetView)
+        dxDrawRectangle(x, y + (height - self.textH) / 2, rectangleWidth, self.textH, self.focus and tocolor(0, 170, 255, 100) or tocolor(0, 0, 0, 100))
     end
 end
 
 function Editbox:updateRenderTarget()
-    dxSetRenderTarget(self.render_target, true)
-        dxDrawText(self.masked and self.masked:rep(#self.text) or self.text, self.offset_temp, 0, self.width, self.height, tocolor(255, 255, 255), 1, self.font, "left", "center")
+    dxSetRenderTarget(self.renderTarget, true)
+        dxDrawText(self.mask and self.mask:rep(utf8.len(self.text)) or self.text, self.offset, 0, self.width, self.height, tocolor(255, 255, 255), 1, self.font, "left", "center")
     dxSetRenderTarget()
 end
 
 function Editbox:updateOffset()
-    local text = self.masked and self.masked:rep(#self.text) or self.text
+    local text = self.mask and self.mask:rep(utf8.len(self.text)) or self.text
 
-    local textWidth = dxGetTextWidth(text, 1, self.font)
-    local caretX = dxGetTextWidth(text:sub(1, self.caret_position), 1, self.font)
+    self.textW = dxGetTextWidth(text, 1, self.font)
+    self.textH = dxGetFontHeight(1, self.font)
+    self.caretX = dxGetTextWidth(utf8.sub(text, 1, self.caretPosition), 1, self.font)
 
-    if caretX + self.offset < 0 then
-        self.offset = -caretX
-    elseif caretX + self.offset > self.width then
-        self.offset = self.width - caretX
-    elseif textWidth <= self.width then
+    if self.caretX + self.offset < 0 then
+        self.offset = -self.caretX
+    elseif self.caretX + self.offset > self.width then
+        self.offset = self.width - self.caretX
+    elseif self.caretX <= self.width then
         self.offset = 0
     end
+
+    self.lastUpdate = getTickCount()
+end
+
+function Editbox:setText(text)
+    self.text = text
+    self.caretPosition = #text
+
+    self:updateOffset()
+    self:updateRenderTarget()
 end
 
 function Editbox:destroy()
-    if isElement(self.render_target) then
-        destroyElement(self.render_target)
+    if isElement(self.renderTarget) then
+        destroyElement(self.renderTarget)
     end
 
     removeEventHandler("onClientClick", root, function(...) self:onClick(...) end)
@@ -190,12 +204,12 @@ function Editbox:onClick(button, state)
 
     if cursor:box(unpack(self.parent)) then
         if self.focus then
-            local text = self.masked and self.masked:rep(#self.text) or self.text
+            local text = self.mask and self.mask:rep(utf8.len(self.text)) or self.text
             local x = cursor.x - self.x - self.offset
             local new
 
-            for i = 1, #self.text do
-                local width = dxGetTextWidth(text:sub(1, i), 1, self.font)
+            for i = 1, utf8.len(text) do
+                local width = dxGetTextWidth(utf8.sub(text, 1, i), 1, self.font)
 
                 if width > x then
                     new = i
@@ -204,34 +218,39 @@ function Editbox:onClick(button, state)
             end
 
             if new then
-                self.caret_position = new
+                self.caretPosition = new
             else
-                self.caret_position = #self.text
+                self.caretPosition = utf8.len(text)
             end
 
-            self.all_selected = false
+            self.allSelected = false
             self:updateOffset()
             self:updateRenderTarget()
         end
 
         self.focus = true
+        guiSetInputMode("no_binds")
     else
         self.focus = false
+        guiSetInputMode("allow_binds")
     end
 end
 
 function Editbox:onCharacter(char)
-    if not self.focus then return end
-    if self.is_number and not tonumber(char) then return end
-    if self.max_length > 0 and #self.text + 1 >= self.max_length then return end
+    if
+        not self.focus or
+        (self.isNumber and not tonumber(char)) or
+        (self.maxLength > 0 and utf8.len(self.text) >= self.maxLength) or
+        not utf8.len(char)
+    then return end
 
-    if self.all_selected then
+    if self.allSelected then
         self.text = char
-        self.caret_position = 1
-        self.all_selected = false
+        self.caretPosition = 1
+        self.allSelected = false
     else
-        self.text = self.text:sub(1, self.caret_position) .. char .. self.text:sub(self.caret_position + 1)
-        self.caret_position = self.caret_position + 1
+        self.text = utf8.sub(self.text, 1, self.caretPosition) .. char .. utf8.sub(self.text, self.caretPosition + 1)
+        self.caretPosition = self.caretPosition + 1
     end
 
     self:updateOffset()
@@ -242,51 +261,53 @@ function Editbox:onKey(key, press)
     if not self.focus then return end
 
     if press then
+        local ctrl = getKeyState("lctrl") or getKeyState("rctrl")
+
         if key == "arrow_l" then
-            if self.all_selected then
-                self.caret_position = 0
-                self.all_selected = false
+            if self.allSelected or ctrl then
+                self.caretPosition = 0
+                self.allSelected = false
             else
-                self.caret_position = clamp(self.caret_position - 1, 0, #self.text)
+                self.caretPosition = clamp(self.caretPosition - 1, 0, utf8.len(self.text))
             end
         elseif key == "arrow_r" then
-            if self.all_selected then
-                self.caret_position = #self.text
-                self.all_selected = false
+            if self.allSelected or ctrl then
+                self.caretPosition = utf8.len(self.text)
+                self.allSelected = false
             else
-                self.caret_position = clamp(self.caret_position + 1, 0, #self.text)
+                self.caretPosition = clamp(self.caretPosition + 1, 0, utf8.len(self.text))
             end
         elseif key == "backspace" then
-            if self.all_selected then
+            if self.allSelected then
                 self.text = ""
-                self.caret_position = 0
-                self.all_selected = false
-            elseif self.caret_position > 0 then
-                self.text = self.text:sub(1, self.caret_position - 1) .. self.text:sub(self.caret_position + 1)
-                self.caret_position = self.caret_position - 1
+                self.caretPosition = 0
+                self.allSelected = false
+            elseif self.caretPosition > 0 then
+                self.text = utf8.sub(self.text, 1, self.caretPosition - 1) .. utf8.sub(self.text, self.caretPosition + 1)
+                self.caretPosition = self.caretPosition - 1
             end
         elseif key == "delete" then
-            if self.all_selected then
+            if self.allSelected then
                 self.text = ""
-                self.caret_position = 0
-                self.all_selected = false
-            elseif self.caret_position < #self.text then
-                self.text = self.text:sub(1, self.caret_position) .. self.text:sub(self.caret_position + 2)
+                self.caretPosition = 0
+                self.allSelected = false
+            elseif self.caretPosition < utf8.len(self.text) then
+                self.text = utf8.sub(self.text, 1, self.caretPosition) .. utf8.sub(self.text, self.caretPosition + 2)
             end
-        elseif key == "c" and getKeyState("lctrl") then
-            if self.all_selected then
+        elseif key == "c" and ctrl then
+            if self.allSelected then
                 setClipboard(self.text)
             end
-        elseif key == "x" and getKeyState("lctrl") then
-            if self.all_selected then
+        elseif key == "x" and ctrl then
+            if self.allSelected then
                 setClipboard(self.text)
 
                 self.text = ""
-                self.caret_position = 0
-                self.all_selected = false
+                self.caretPosition = 0
+                self.allSelected = false
             end
-        elseif key == "a" and getKeyState("lctrl") then
-            self.all_selected = true
+        elseif key == "a" and ctrl then
+            self.allSelected = true
         end
 
         self:updateOffset()
@@ -309,16 +330,16 @@ end
 
 function Editbox:onPaste(text)
     if not self.focus then return end
-    if self.is_number and not tonumber(text) then return end
-    if self.max_length > 0 and #self.text + #text >= self.max_length then return end
+    if self.isNumber and not tonumber(text) then return end
+    if self.maxLength > 0 and utf8.len(self.text) + #text >= self.maxLength then return end
 
-    if self.all_selected then
+    if self.allSelected then
         self.text = text
-        self.caret_position = #text
-        self.all_selected = false
+        self.caretPosition = #text
+        self.allSelected = false
     else
-        self.text = self.text:sub(1, self.caret_position) .. text .. self.text:sub(self.caret_position + 1)
-        self.caret_position = self.caret_position + #text
+        self.text = utf8.sub(self.text, 1, self.caretPosition) .. text .. utf8.sub(self.text, self.caretPosition + 1)
+        self.caretPosition = self.caretPosition + #text
     end
 
     self:updateOffset()
