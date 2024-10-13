@@ -44,10 +44,9 @@ Editbox.__index = Editbox
 function Editbox.new(properties)
     local self = setmetatable({}, Editbox)
 
-    self.text = ""
-
     -- Properties
     self.focus = false
+    self.text = ""
     self.font = "default"
     self.mask = false
     self.isNumber = false
