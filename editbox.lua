@@ -44,7 +44,16 @@ Editbox.__index = Editbox
 function Editbox.new(properties)
     local self = setmetatable({}, Editbox)
 
+    self.text = ""
+
+    -- Properties
     self.focus = false
+    self.font = "default"
+    self.mask = false
+    self.isNumber = false
+    self.maxLength = 0
+    self.parent = {-1, -1, 0, 0}
+    -- Properties
 
     self.x = 0
     self.y = 0
@@ -52,15 +61,6 @@ function Editbox.new(properties)
     self.height = false
 
     self.renderTarget = nil
-    self.text = ""
-
-    -- Properties
-    self.font = "default"
-    self.mask = false
-    self.isNumber = false
-    self.maxLength = 0
-    self.parent = {-1, -1, 0, 0}
-    -- Properties
 
     if properties then
         for i, v in pairs(properties) do
