@@ -23,13 +23,13 @@ function cursor:box(x, y, width, height)
     return self.x >= x and self.x <= x + width and self.y >= y and self.y <= y + height
 end
 
-local function clamp(value, min, max)
-    return math.max(min, math.min(value, max))
-end
-
 local _dxDrawText = dxDrawText
 function dxDrawText(text, x, y, width, height, ...)
     return _dxDrawText(text, x, y, x + width, y + height, ...)
+end
+
+local function clamp(value, min, max)
+    return math.max(min, math.min(value, max))
 end
 
 local function lerp(a, b, t)
@@ -143,7 +143,7 @@ function Editbox:draw(placeholder, x, y, width, height, color)
         dxSetBlendMode("blend")
     end
 
-    if self.focus and (now % 1000 < 500 or now - self.lastUpdate < 500) then
+    if self.focus and (now % 1000 < 500 or now - self.lastUpdate < 200) then
         dxDrawRectangle(x + clamp(self.width - 1, 0, self.caretX + self.offsetView), y + (height - self.textH) / 2, 1, self.textH, color)
     end
 
