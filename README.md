@@ -20,6 +20,7 @@ O bloco de propriedades descreve todas as propriedades que podem ser definidas a
 
 ```lua
 Editbox.new({
+    focus = false,    -- Foco da editbox.
     font = "default", -- Fonte utilizada para o texto.
     mask = false,     -- Caractere utilizado para mascarar o texto (útil para senhas).
     isNumber = false, -- Define se a entrada deve aceitar apenas números.
