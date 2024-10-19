@@ -152,7 +152,7 @@ function Editbox:draw(placeholder, x, y, width, height, color)
         dxDrawText(placeholder, x, y, width, height, color, 1, self.font, "left", "center")
     else
         dxSetBlendMode("add")
-        dxDrawImage(x, y, width, height, self.renderTarget, color)
+        dxDrawImage(x, y, width, height, self.renderTarget, 0, 0, 0, color)
         dxSetBlendMode("blend")
     end
 
