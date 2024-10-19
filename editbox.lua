@@ -2,6 +2,24 @@
 
 local screenW, screenH = guiGetScreenSize()
 
+local function clamp(value, min, max)
+    return math.max(min, math.min(value, max))
+end
+
+local function lerp(a, b, t)
+    return a + (b - a) * t
+end
+
+local function round(num, decimals)
+    local mult = 10 ^ (decimals or 0)
+    return math.floor(num * mult + 0.5) / mult
+end
+
+local _dxDrawText = dxDrawText
+local function dxDrawText(text, x, y, width, height, ...)
+    return _dxDrawText(text, x, y, x + width, y + height, ...)
+end
+
 local cursor = {
     state = false,
     x = 0,
@@ -21,19 +39,6 @@ end
 
 function cursor:box(x, y, width, height)
     return self.x >= x and self.x <= x + width and self.y >= y and self.y <= y + height
-end
-
-local _dxDrawText = dxDrawText
-function dxDrawText(text, x, y, width, height, ...)
-    return _dxDrawText(text, x, y, x + width, y + height, ...)
-end
-
-local function clamp(value, min, max)
-    return math.max(min, math.min(value, max))
-end
-
-local function lerp(a, b, t)
-    return a + (b - a) * t
 end
 
 -- Class
@@ -56,8 +61,8 @@ function Editbox.new(properties)
 
     self.x = 0
     self.y = 0
-    self.width = false
-    self.height = false
+    self.width = 0
+    self.height = 0
 
     self.renderTarget = nil
 
@@ -92,10 +97,17 @@ function Editbox.new(properties)
 
     self.allSelected = false
 
-    addEventHandler("onClientClick", root, function(...) self:onClick(...) end)
-    addEventHandler("onClientCharacter", root, function(...) self:onCharacter(...) end)
-    addEventHandler("onClientKey", root, function(...) self:onKey(...) end)
-    addEventHandler("onClientPaste", root, function(...) self:onPaste(...) end)
+    self.events = {
+        onClick = function(...) self:onClick(...) end,
+        onCharacter = function(...) self:onCharacter(...) end,
+        onKey = function(...) self:onKey(...) end,
+        onPaste = function(...) self:onPaste(...) end
+    }
+
+    addEventHandler("onClientClick", root, self.events.onClick, true, "high")
+    addEventHandler("onClientCharacter", root, self.events.onCharacter)
+    addEventHandler("onClientKey", root, self.events.onKey)
+    addEventHandler("onClientPaste", root, self.events.onPaste)
 
     if self.mask then
         assert(type(self.mask) == "string", "Bad argument @ 'Editbox.new' [expected string at argument 1, got " .. type(self.mask) .. "]")
@@ -112,15 +124,16 @@ function Editbox:draw(placeholder, x, y, width, height, color)
     self.x = x
     self.y = y
 
-    if not isElement(self.renderTarget) or (not self.width or self.width ~= width or not self.height or self.height ~= height) then
+    if not isElement(self.renderTarget) or (self.width ~= width or self.height ~= height) then
         self.width = width
         self.height = height
 
-        if isElement(self.rendertarget) then
-            destroyElement(self.rendertarget)
+        if isElement(self.renderTarget) then
+            destroyElement(self.renderTarget)
         end
 
         self.renderTarget = dxCreateRenderTarget(width, height, true)
+        self:updateOffset()
     end
 
     for i, v in pairs(self.keys) do
@@ -129,7 +142,7 @@ function Editbox:draw(placeholder, x, y, width, height, color)
         end
     end
 
-    self.offsetView = lerp(self.offsetView, self.offset, 0.2)
+    self.offsetView = round(lerp(self.offsetView, self.offset, 0.2), 2)
 
     if self.offsetView ~= self.offset then
         self:updateRenderTarget()
@@ -139,7 +152,7 @@ function Editbox:draw(placeholder, x, y, width, height, color)
         dxDrawText(placeholder, x, y, width, height, color, 1, self.font, "left", "center")
     else
         dxSetBlendMode("add")
-        dxDrawImage(x, y, width, height, self.renderTarget, 0, 0, 0, color)
+        dxDrawImage(x, y, width, height, self.renderTarget, color)
         dxSetBlendMode("blend")
     end
 
@@ -154,6 +167,8 @@ function Editbox:draw(placeholder, x, y, width, height, color)
 end
 
 function Editbox:updateRenderTarget()
+    if not isElement(self.renderTarget) then return end
+
     dxSetRenderTarget(self.renderTarget, true)
         dxDrawText(self.mask and self.mask:rep(utf8.len(self.text)) or self.text, self.offsetView, 0, self.width, self.height, tocolor(255, 255, 255), 1, self.font, "left", "center")
     dxSetRenderTarget()
@@ -175,6 +190,7 @@ function Editbox:updateOffset()
     end
 
     self.lastUpdate = getTickCount()
+    self:updateRenderTarget()
 end
 
 function Editbox:setText(text)
@@ -182,7 +198,17 @@ function Editbox:setText(text)
     self.caretPosition = #text
 
     self:updateOffset()
-    self:updateRenderTarget()
+end
+
+function Editbox:setFocus(state)
+    self.focus = state
+
+    if state then
+        self.lastUpdate = getTickCount()
+        guiSetInputMode("no_binds")
+    else
+        guiSetInputMode("allow_binds")
+    end
 end
 
 function Editbox:destroy()
@@ -190,12 +216,14 @@ function Editbox:destroy()
         destroyElement(self.renderTarget)
     end
 
-    removeEventHandler("onClientClick", root, function(...) self:onClick(...) end)
-    removeEventHandler("onClientCharacter", root, function(...) self:onCharacter(...) end)
-    removeEventHandler("onClientKey", root, function(...) self:onKey(...) end)
-    removeEventHandler("onClientPaste", root, function(...) self:onPaste(...) end)
+    removeEventHandler("onClientClick", root, self.events.onClick)
+    removeEventHandler("onClientCharacter", root, self.events.onCharacter)
+    removeEventHandler("onClientKey", root, self.events.onKey)
+    removeEventHandler("onClientPaste", root, self.events.onPaste)
 
     self = nil
+    collectgarbage("collect")
+    return self
 end
 
 function Editbox:onClick(button, state)
@@ -224,10 +252,11 @@ function Editbox:onClick(button, state)
 
             self.allSelected = false
             self:updateOffset()
-            self:updateRenderTarget()
         end
 
         self.focus = true
+        self.lastUpdate = getTickCount()
+
         guiSetInputMode("no_binds")
     else
         self.focus = false
@@ -253,11 +282,11 @@ function Editbox:onCharacter(char)
     end
 
     self:updateOffset()
-    self:updateRenderTarget()
 end
 
 function Editbox:onKey(key, press)
     if not self.focus then return end
+    guiSetInputMode("no_binds")
 
     if press then
         local ctrl = getKeyState("lctrl") or getKeyState("rctrl")
@@ -310,7 +339,6 @@ function Editbox:onKey(key, press)
         end
 
         self:updateOffset()
-        self:updateRenderTarget()
 
         if self.keys[key] then
             if self.keys[key].state then
@@ -342,5 +370,4 @@ function Editbox:onPaste(text)
     end
 
     self:updateOffset()
-    self:updateRenderTarget()
 end
