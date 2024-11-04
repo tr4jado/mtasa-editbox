@@ -55,7 +55,7 @@ function Editbox.new(properties)
     self.font = "default"
     self.mask = false
     self.isNumber = false
-    self.maxLength = 0
+    self.maxLength = math.huge
     self.parent = {-1, -1, 0, 0}
     -- Properties
 
